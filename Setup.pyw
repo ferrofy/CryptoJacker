@@ -37,12 +37,11 @@ elif Total_Threads <= 25:
 else:
     Mine_Threads = math.floor(Total_Threads * 0.4)
 
-Thread_Percent = min(100, math.ceil((Mine_Threads / Total_Threads) * 100))
-
 with open(Config_Path, "r") as F:
     Config = json.load(F)
 
-Config["cpu"]["max-threads-hint"] = Thread_Percent
+Config["cpu"].pop("max-threads-hint", None)
+Config["cpu"]["threads"] = [{"id": I, "intensity": 100, "affinity": -1} for I in range(Mine_Threads)]
 
 for Pool in Config.get("pools", []):
     Pool["pass"] = User_Name
