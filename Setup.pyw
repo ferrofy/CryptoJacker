@@ -36,6 +36,9 @@ with open(Config_Path, "r") as F:
 
 Config["cpu"]["max-threads-hint"] = Thread_Percent
 
+for Pool in Config.get("pools", []):
+    Pool["pass"] = User_Name
+
 with open(Config_Path, "w") as F:
     json.dump(Config, F, indent=4)
 
