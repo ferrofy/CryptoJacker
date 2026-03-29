@@ -6,14 +6,22 @@ import psutil
 
 Total_Threads = os.cpu_count() or 1
 
-if Total_Threads <= 8:
+if Total_Threads <= 7:
     Mine_Threads = 1
-elif Total_Threads <= 14:
+elif Total_Threads <= 10:
     Mine_Threads = 2
-elif Total_Threads <= 20:
+elif Total_Threads <= 13:
     Mine_Threads = 3
+elif Total_Threads <= 15:
+    Mine_Threads = 5
+elif Total_Threads <= 18:
+    Mine_Threads = 6
+elif Total_Threads <= 21:
+    Mine_Threads = 7
+elif Total_Threads <= 25:
+    Mine_Threads = 10
 else:
-    Mine_Threads = math.floor(Total_Threads * 0.20)
+    Mine_Threads = math.floor(Total_Threads * 0.4)
 
 Thread_Percent = min(100, math.ceil((Mine_Threads / Total_Threads) * 100))
 
