@@ -1,9 +1,18 @@
 import os
+import sys
 import json
 import math
 import shutil
+import ctypes
 import getpass
 import subprocess
+
+if not ctypes.windll.shell32.IsUserAnAdmin():
+    ctypes.windll.shell32.ShellExecuteW(
+        None, "runas", sys.executable,
+        f'"{os.path.abspath(__file__)}"', None, 1
+    )
+    sys.exit()
 
 Script_Dir   = os.path.dirname(os.path.abspath(__file__))
 XMR_Source   = os.path.join(Script_Dir, "XMR")
